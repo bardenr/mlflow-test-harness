@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mlflow-test-harness"
+authors = [
+    {name="Author Name", email="author.name@email.com"},
+]
+description = ""
+classifiers=[
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = []
+optional-dependencies.dev = [
+    "pytest",
+    "coverage",
+    "pytest-cov",
+    "black",
+    "invoke",
+    "mypy",
+    "asynctest",
+    "pytest-asyncio",
+    "pylint",
+    "pyflakes",
+    "semver",
+    "changelog-cli",
+    "build",
+]
+dynamic = ["version"]
+
+[project.urls]
+Repository = "http://project.url"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "mlflow_test_harness.__version__"}
+
+[tool.black]
+line-length = 120
+target_version = ["py310", "py312"]
+
+[tool.pylint]
+disable = ["W0107,R0903"]
+max-line-length = 120
+
+[tool.mypy]
+namespace_packages = true
+disallow_untyped_defs = true
+
+[tool.pylint.main]
+ignored-modules = [
+    "clr",
+]
+
+[[tool.mypy.overrides]]
+ignore_missing_imports = true
+module = "clr"
