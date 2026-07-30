@@ -59,3 +59,16 @@ ignored-modules = [
 [[tool.mypy.overrides]]
 ignore_missing_imports = true
 module = "clr"
+
+[tool.uv.workspace]
+members = [
+    ".",
+]
+
+[tool.uv.sources]
+mlflow-test-harness = { workspace = true, editable = true }
+
+[dependency-groups]
+dev = [
+    "mlflow-test-harness[dev]",
+]
