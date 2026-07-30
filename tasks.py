@@ -69,6 +69,56 @@ def test(context: Context) -> None:
 
 
 @invoke.task
+def install_mlflow(context: Context, mlflow_path: str = "../mlflow") -> None:
+    """Installs MLflow as an editable dependency from a local path.
+
+    Args:
+        mlflow_path: Path to the MLflow repository (default: ../mlflow)
+    """
+    mlflow_dir = Path(mlflow_path).resolve()
+
+    # Validate path exists
+    if not mlflow_dir.exists():
+        print(f"Error: MLflow path does not exist: {mlflow_dir}")
+        sys.exit(1)
+
+    # Validate it's a directory
+    if not mlflow_dir.is_dir():
+        print(f"Error: MLflow path is not a directory: {mlflow_dir}")
+        sys.exit(1)
+
+    # Validate it contains MLflow by checking for setup.py or pyproject.toml
+    setup_py = Path(mlflow_dir, "setup.py")
+    pyproject_toml = Path(mlflow_dir, "pyproject.toml")
+
+    if not setup_py.exists() and not pyproject_toml.exists():
+        print(f"Error: MLflow path does not contain setup.py or pyproject.toml: {mlflow_dir}")
+        print("This doesn't appear to be a valid MLflow repository.")
+        sys.exit(1)
+
+    # Additional validation: check if it's actually MLflow
+    if setup_py.exists():
+        setup_content = setup_py.read_text()
+        if "mlflow" not in setup_content.lower():
+            print("Warning: setup.py exists but doesn't mention 'mlflow'. Are you sure this is the MLflow repository?")
+
+    print(f"Installing MLflow from: {mlflow_dir}")
+    cmd = f"pip install -e {mlflow_dir}"
+    context.run(cmd, echo=True, pty=USE_PTY)
+    print("MLflow installed successfully!")
+
+
+@invoke.task
+def uninstall_mlflow(context: Context) -> None:
+    """Uninstalls MLflow from the current environment."""
+
+    print("Uninstalling MLflow...")
+    cmd = "pip uninstall -y mlflow"
+    context.run(cmd, echo=True, pty=USE_PTY, warn=True)
+    print("MLflow uninstalled successfully!")
+
+
+@invoke.task
 def set_version(context: Context) -> None:
     """Sets __version__ in __init__.py file."""
 

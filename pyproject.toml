@@ -28,6 +28,9 @@ optional-dependencies.dev = [
     "changelog-cli",
     "build",
 ]
+optional-dependencies.mlflow = [
+    "mlflow",
+]
 dynamic = ["version"]
 
 [project.urls]
