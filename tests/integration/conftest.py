@@ -1,8 +1,13 @@
 import os
 import shutil
 import subprocess
+import time
+from pathlib import Path
+from subprocess import Popen
 
 import pytest
+
+_podman_socket_proc: Popen | None = None
 
 
 @pytest.fixture(scope="package", autouse=False)
@@ -32,6 +37,12 @@ def _configure_testcontainers() -> None:
     the tests.
     """
 
+    global _podman_socket_proc
+    docker = shutil.which("docker")
+    if docker is not None:
+        yield
+        return
+
     podman = shutil.which("podman")
     if podman is None:
         yield
@@ -51,6 +62,14 @@ def _configure_testcontainers() -> None:
     XDG_RUNTIME_DIR = os.environ.get("XDG_RUNTIME_DIR")
     if podman_socket is None and XDG_RUNTIME_DIR is not None:
         podman_socket = f"{XDG_RUNTIME_DIR}/podman/podman.sock"
+
+        open_socket = ["podman", "system", "service", "--time=0"]
+        _podman_socket_proc = Popen(args=open_socket)
+
+        for i in len([0.5] * 5):
+            time.sleep(i)
+            if Path(podman_socket).exists():
+                break
 
     assert podman_socket is not None
     assert podman_socket != ""
@@ -74,3 +93,12 @@ def _configure_testcontainers() -> None:
 
     if ryuk_disabled is None:
         _ = os.environ.pop(ENV_TESTCONTAINERS_RYUK_DISABLED, None)
+
+    if _podman_socket_proc is not None:
+        _podman_socket_proc.terminate()
+        _ = _podman_socket_proc.wait(20)
+        _podman_socket_proc = None
+
+    assert not Path(podman_socket).exists()
+
+
