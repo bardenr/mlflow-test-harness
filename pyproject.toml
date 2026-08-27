@@ -12,7 +12,11 @@ classifiers=[
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dependencies = []
+dependencies = [
+    "psycopg2-binary>=2.9.12",
+    "pymssql>=2.3.13",
+    "pymysql>=1.2.0",
+]
 optional-dependencies.dev = [
     "pytest",
     "coverage",
@@ -27,6 +31,7 @@ optional-dependencies.dev = [
     "semver",
     "changelog-cli",
     "build",
+    "testcontainers",
 ]
 optional-dependencies.mlflow = [
     "mlflow",

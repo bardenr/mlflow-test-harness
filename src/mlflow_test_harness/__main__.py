@@ -4,7 +4,6 @@ import sys
 
 from mlflow_test_harness import __version__
 
-
 WELCOME_MESSAGE = """
 Hello! This is a default command line entry point for mlflow_test_harness. When this package is installed, this module
 allows you to invoke the cli by running:

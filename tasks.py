@@ -5,7 +5,6 @@ from pathlib import Path
 import invoke
 from invoke.context import Context
 
-
 WINDOWS = invoke.terminals.WINDOWS
 USE_PTY = not WINDOWS
 
@@ -103,7 +102,7 @@ def install_mlflow(context: Context, mlflow_path: str = "../mlflow") -> None:
             print("Warning: setup.py exists but doesn't mention 'mlflow'. Are you sure this is the MLflow repository?")
 
     print(f"Installing MLflow from: {mlflow_dir}")
-    cmd = f"pip install -e {mlflow_dir}"
+    cmd = f"pip install -e {mlflow_dir}[dev]"
     context.run(cmd, echo=True, pty=USE_PTY)
     print("MLflow installed successfully!")
 
