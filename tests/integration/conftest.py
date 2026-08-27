@@ -66,7 +66,7 @@ def _configure_testcontainers() -> None:
         open_socket = ["podman", "system", "service", "--time=0"]
         _podman_socket_proc = Popen(args=open_socket)
 
-        for i in len([0.5] * 5):
+        for i in [0.5] * 5:
             time.sleep(i)
             if Path(podman_socket).exists():
                 break
