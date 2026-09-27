@@ -99,6 +99,4 @@ def _configure_testcontainers() -> None:
         _ = _podman_socket_proc.wait(20)
         _podman_socket_proc = None
 
-    assert not Path(podman_socket).exists()
-
-
+        assert not Path(podman_socket).exists()
