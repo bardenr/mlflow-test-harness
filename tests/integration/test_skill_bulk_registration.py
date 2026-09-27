@@ -31,7 +31,7 @@ def database_uri(request):
         )
     elif request.param == "mssql":
         database = SqlServerContainer(
-            "mcr.microsoft.com/mssql/server:2022-latest", platform="linux/amd64"
+            "mcr.microsoft.com/mssql/server:2019-latest", platform="linux/amd64"
         ).with_env("MSSQL_COLLATION", "SQL_Latin1_General_CP1_CI_AS")
     else:
         database = PostgresContainer("postgres:16")
@@ -71,45 +71,29 @@ def case_change(request):
     return request.param
 
 
-def test_bulk_registration_distinguishes_case(store, definition, case_change):
+def test_bulk_registration_reuses_highest_case_sensitive_match(store, definition, case_change):
     original = store.bulk_register_skills([definition], created_by="original")[0]
+    exact = store.create_skill_version(**definition, created_by="second")
     field, value = case_change
     changed = {**definition, field: value}
 
     imported = store.bulk_register_skills([changed], created_by="importer")[0]
 
-    assert imported.version == 2
+    assert (original.version, exact.version, imported.version) == (1, 2, 3)
     assert imported.source == GitSource(
         url=changed["source"], ref=changed["ref"], subpath=changed["subpath"]
     )
     assert imported.created_by == "importer"
     assert store.bulk_register_skills([changed])[0] == imported
-    assert store.bulk_register_skills([definition])[0] == original
-    with store.ManagedSessionMaker() as session:
-        versions = store._get_query(session, SqlSkillVersion).filter_by(name=definition["name"])
-        assert versions.count() == 2
-        if session.bind.dialect.name in {"mysql", "mssql"}:
-            # Ensure the fixture actually exercises a case-insensitive SQL comparison.
-            assert versions.filter(getattr(SqlSkillVersion, field) == value).count() == 2
-
-
-def test_bulk_registration_finds_exact_match_below_newer_false_match(
-    store, definition, case_change
-):
-    store.create_skill_version(**definition)
-    exact = store.create_skill_version(**definition, created_by="original")
-    field, value = case_change
-    newer = store.create_skill_version(**{**definition, field: value}, created_by="other")
-
     assert store.bulk_register_skills([definition], created_by="importer")[0] == exact
-    assert store.get_skill_version(definition["name"], newer.version) == newer
+    assert store.get_skill_version(definition["name"], 1) == original
+    assert store.get_skill_version(definition["name"], 3) == imported
     with store.ManagedSessionMaker() as session:
         versions = store._get_query(session, SqlSkillVersion).filter_by(name=definition["name"])
         assert versions.count() == 3
         if session.bind.dialect.name in {"mysql", "mssql"}:
-            assert (
-                versions.filter(getattr(SqlSkillVersion, field) == definition[field]).count() == 3
-            )
+            # Ensure the fixture actually exercises a case-insensitive SQL comparison.
+            assert versions.filter(getattr(SqlSkillVersion, field) == value).count() == 3
 
 
 def _wait_for_postgres_blocker(engine, blocked_pid, blocker_pid):
